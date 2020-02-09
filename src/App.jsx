@@ -1,6 +1,16 @@
-import React, { createContext, Component, Fragment } from 'react';
+import React, {
+  createContext,
+  Component,
+  Fragment,
+  lazy,
+  Suspense
+} from 'react';
 import logo from './logo.svg';
 import './App.css';
+
+const About = lazy(() => import(/*webpackChunkName:"About"*/ './About')); //lazy()返回的就是一个react组件
+
+//ErrorBoundary 使用 componentDidCatch生命周期函数
 
 const CountdownContext = createContext();
 const OnlineContext = createContext();
@@ -27,27 +37,45 @@ function Middle() {
 class App extends Component {
   state = {
     countNumber: 100,
-    onlineState: false
+    onlineState: false,
+    hasError: false
   };
+
+  componentDidCatch() {
+    this.setState({
+      hasError: true
+    });
+  }
+
   render() {
+    if (this.state.hasError) {
+      return <div>unable to loading component</div>;
+    }
+
     const { countNumber, onlineState } = this.state;
     return (
-      <CountdownContext.Provider value={countNumber}>
-        <OnlineContext.Provider value={onlineState}>
-          {/* provide要进行嵌套 */}
-          <button
-            onClick={() => this.setState({ countNumber: countNumber - 1 })}>
-            Reduce 1
-          </button>
-          <button
-            onClick={
-              () => this.setState({ onlineState: !onlineState }) //online取反
-            }>
-            Toggle Online
-          </button>
-          <Middle />
-        </OnlineContext.Provider>
-      </CountdownContext.Provider>
+      <Fragment>
+        <Suspense fallback={<div>loading</div>}>
+          <About />
+        </Suspense>
+
+        <CountdownContext.Provider value={countNumber}>
+          <OnlineContext.Provider value={onlineState}>
+            {/* provide要进行嵌套 */}
+            <button
+              onClick={() => this.setState({ countNumber: countNumber - 1 })}>
+              Reduce 1
+            </button>
+            <button
+              onClick={
+                () => this.setState({ onlineState: !onlineState }) //online取反
+              }>
+              Toggle Online
+            </button>
+            <Middle />
+          </OnlineContext.Provider>
+        </CountdownContext.Provider>
+      </Fragment>
     );
   } //向下传递值
 }
