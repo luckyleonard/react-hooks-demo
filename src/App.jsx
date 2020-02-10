@@ -7,7 +7,8 @@ import React, {
   useState,
   useEffect,
   useMemo,
-  memo
+  memo,
+  useRef
 } from 'react';
 import logo from './logo.svg';
 import './App.css';
@@ -199,16 +200,31 @@ const Counter = memo(function Counter(props) {
   );
 });
 
+function useCount(defaultCount) {
+  const [count, setCount] = useState(defaultCount);
+  const it = useRef();
+
+  useEffect(() => {
+    it.current = setInterval(() => {
+      setCount(count => count + 1);
+    }, 1000);
+  }, []);
+
+  useEffect(() => {
+    if (count >= 10) {
+      clearInterval(it.current);
+    }
+  });
+
+  return [count, setCount];
+}
+
 function App4() {
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useCount(0); //调用自定义hooks
 
   const double = useMemo(() => {
     return count * 2;
   }, [count === 3]); //count0-2都是false 不执行 3时变成true执行， 4变成false执行
-
-  const half = useMemo(() => {
-    return double / 4;
-  }, [double]); //这样half就依赖double了
 
   const onClick = useMemo(() => {
     return () => {
