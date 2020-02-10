@@ -5,7 +5,9 @@ import React, {
   lazy,
   Suspense,
   useState,
-  useEffect
+  useEffect,
+  useMemo,
+  memo
 } from 'react';
 import logo from './logo.svg';
 import './App.css';
@@ -183,4 +185,49 @@ function App(props) {
     </Fragment>
   );
 }
-export default App;
+
+const Counter = memo(function Counter(props) {
+  const [name, setName] = useState(() => {
+    console.log('initial name');
+    return props.defaultName || '';
+  });
+  console.log('Counter render');
+  return (
+    <h1 onClick={props.onClick}>
+      {props.count},{name}
+    </h1>
+  );
+});
+
+function App4() {
+  const [count, setCount] = useState(0);
+
+  const double = useMemo(() => {
+    return count * 2;
+  }, [count === 3]); //count0-2都是false 不执行 3时变成true执行， 4变成false执行
+
+  const half = useMemo(() => {
+    return double / 4;
+  }, [double]); //这样half就依赖double了
+
+  const onClick = useMemo(() => {
+    return () => {
+      console.log('click');
+    };
+  }, []); //只执行一次的返回函数给onClick 锁定函数句柄
+
+  return (
+    <Fragment>
+      <button
+        type='button'
+        onClick={() => {
+          setCount(count + 1);
+        }}>
+        Click ({count}), double({double})
+      </button>
+      <Counter count={double} defaultName='leonard' onClick={onClick} />
+    </Fragment>
+  );
+}
+
+export default App4;
